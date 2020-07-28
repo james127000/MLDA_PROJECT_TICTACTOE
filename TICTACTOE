@@ -1,0 +1,195 @@
+import time
+
+class game:
+    def __init__(self):
+        self.initialize_game()
+
+    def initialize_game(self):
+        self.current_state=[['.','.','.'],
+                            ['.','.','.'],
+                            ['.','.','.']]
+        self.player_turn='X'
+        
+    def draw_board(self):
+        print('0| 1| 2|')
+        for i in range(0,3):
+            for j in range (0,3):
+                print('{}|'.format(self.current_state[i][j]), end=" ")
+            print()
+        print()
+    #determine if the mode move is legal move
+    def is_valid(self,px,py):
+        if px < 0 or px > 2 or py < 0 or py > 2:
+            return False
+        elif self.current_state[px][py] !='.':
+            return False
+        else:
+            return True
+
+    #determine if the game has ended and returns the winner in each case
+    def is_end(self):
+        #vertical Win
+        for i in range(0, 3):
+            if (self.current_state[0][i]!='.' and
+                self.current_state[0][i]==self.current_state[1][i] and
+                self.current_state[1][i]==self.current_state[2][i]):
+                return self.current_state[0][i]
+
+        #Horizontal Win
+        for i in range(0, 3):
+            if(self.current_state[i]==['x', 'x', 'x']):
+                return 'x'
+            elif (self.current_state[i]==['o', 'o', 'o']):
+                return 'o'
+        #main diagonal Win
+        if (self.current_state[0][0]!='.' and
+            self.current_state[0][0]==self.current_state[1][1] and
+            self.current_state[0][0]==self.current_state[2][2]):
+            return self.current_state[0][0]
+        #second diagonal Win
+        if (self.current_state[0][2]!='.' and
+            self.current_state[0][2]==self.current_state[1][1] and
+            self.current_state[0][2]==self.current_state[2][0]):
+            return self.current_state[0][2]
+    
+        #board is full
+        for i in range(0, 3):
+            for j in range(0, 3):
+                # ther is an empty field, we continue the game
+                if (self.current_state[i][j]=='.'):
+                    return None
+
+        #it is a tie!
+        return '.'
+
+    def max(self):
+
+    
+        #possible values for maxv are:
+        # -1 - loss
+        # 0 - a tie
+        # 1 - Win
+
+        #we are initially setting it to -2 as worse than the worst case:
+        maxv = -2
+
+        px=None
+        py= None
+
+        result= self.is_end()
+
+        if result =='x':
+            return(-1, 0, 0)
+        elif result =='o':
+            return(1, 0, 0)
+        elif result =='.':
+            return (0, 0, 0)
+
+        for i in range(0, 3):
+            for j in range(0, 3):
+                if self.current_state[i][j]=='.':
+                    # On the empty field player '0' makes a move and calls min
+                    # That's one branch of the game tree.
+                    self.current_state[i][j]='o'
+                    (m, min_i, min_j) =self.min()
+                    # Fixing the maxv value if needed
+                    if m>maxv:
+                        maxv = m
+                        px = i
+                        py = j
+                    self.current_state[i][j] ='.'
+        return(maxv, px, py)
+
+# Player 'X'is min
+    def min(self):
+        minv = 2
+
+        qx=None
+        qy=None
+
+        result = self.is_end()
+
+        if result == 'x':
+            return (-1, 0, 0)
+        elif result == '0':
+            return (1, 0, 0)
+        elif result == '.':
+            return (0, 0, 0)
+        
+        for i in range(0, 3):
+            for j in range(0, 3):
+                if self.current_state[i][j] == '.':
+                    self.current_state[i][j] = 'x'
+                    (m, max_i, max_j) = self.max()
+                    if m < minv:
+                        minv = m
+                        qx = i
+                        qy = j
+                    self.current_state[i][j]='.'
+        
+        return(minv, qx, qy)
+
+    def play(self):
+        while True:
+            self.draw_board()
+            self.result = self.is_end()
+
+            if self.result != None:
+                if self.result =='x':
+                    print(' The winner is x!')
+                elif self.result == 'o':
+                    print(' The winner is o!')
+                elif self.result =='.':
+                    print(' it is a tie!')
+        
+                self.initialize_game()
+                return
+
+            if self.player_turn =='x':
+            
+                while True:
+                    start = time.time()
+                    (m, qx, qy) = self.min()
+                    end =time.time()
+                    print('evaluation time {}s'.format(round(end -start, 7)))
+                    print('recomended move: X= {}, Y ={}'. format(qx, qy))
+
+                    px = int(input('insert the x coordinate: '))
+                    py = int(input ('insert the Y coordinate: '))
+
+                    (qx, qy) =(px, py)
+
+                    if self.is_valid(px, py):
+                        self.current_state[px][py]= 'x'
+                        self.player_turn= 'o'
+                        break
+                    else:
+                        print('The move is not valid! Try again.')
+
+            # If Ai turn
+            else:
+                (m, px, py)= self.max()
+                self.current_state[px][py] ='o'
+                self.player_turn= 'x'
+
+def main():
+    g= game()
+    g.play()
+
+if __name__ =="__main__":
+    main()
+
+
+
+
+
+
+#Reference
+
+https://www.youtube.com/watch?v=trKjYdBASyQ
+https://stackabuse.com/minimax-and-alpha-beta-pruning-in-python/
+
+
+
+
+
